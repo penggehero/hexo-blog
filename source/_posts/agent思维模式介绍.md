@@ -739,17 +739,34 @@ sequenceDiagram
 
 ### **模式介绍:**
 
-Self-Ask 是一种建立在思维链之上的推理模式，它通过引导模型自我提问和回答中间问题来解决更复杂的问题。当模型遇到一个直接无法回答的问题时，Self-Ask 模式会促使模型将问题分解为一系列后续问题，并利用外部工具（如搜索引擎）来寻找这些子问题的答案。这种方法明确地展示了模型的推理过程，并通过将复杂问题分解为可以独立验证的简单问题，提高了最终答案的可靠性。
+Self-Ask 是一种旨在提升大型语言模型（LLM）推理能力和答案透明度的技术。它的核心思想是让 AI Agent 模仿人类解决复杂问题的思维过程：当面对一个复杂问题时，不是直接给出最终答案，而是先将问题分解成一系列更小、更易于回答的子问题。
+
+AI Agent 会“自问自答”（Self-Ask），通过提出这些后续问题（Follow-up questions），并利用外部工具（如搜索引擎）来查找每一个子问题的“中间答案”（Intermediate answer）。这个过程会一直持续，直到收集到足够的信息来推导出最终答案。
+
+与传统方法的区别:
+
+- 直接提问 (Direct Prompting): 直接向LLM提问并期望得到最终答案。对于需要多步推理的复杂问题，模型可能会出错或“幻觉”出不准确的信息。
+- 思维链 (Chain of Thought, CoT): CoT通过让模型在回答前先“思考”一系列推理步骤来提升性能。但这些推理完全依赖于模型内部的知识，如果模型知识过时或不准确，推理结果也可能是错误的。
+- Self-Ask: Self-Ask 将思维链的推理过程外化和显式化了。它不仅分解问题，还强制模型通过调用外部工具来验证和获取每个推理步骤所需的事实信息，从而大大提高了答案的准确性和可靠性。同时，整个“自问自答”的过程清晰可见，使得用户可以轻松理解模型是如何一步步得出结论的。
+
+核心优势:
+
+- 提升准确性: 通过外部工具（如搜索API）获取事实信息，减少了模型依赖内部知识可能产生的错误。
+- 增强透明度: 推理过程被分解为一系列清晰的问答步骤，让用户可以审查和理解答案的来源和逻辑。
+- 解决复杂问题: 能够有效处理那些需要组合多个信息点才能回答的复合型问题。
 
 ```mermaid
 graph TD
-    A[初始问题] --> B{LLM: 我需要知道什么才能回答这个问题?};
-    B --> C["生成后续问题"];
-    C --> D{"使用工具 (如搜索) 回答后续问题"};
-    D --> E["获得中间答案"];
-    E --> B;
-    B -- 所有子问题都已回答 --> F["整合所有中间答案"];
-    F --> G[生成最终答案];
+    A[开始: 用户提出复杂问题] --> B{LLM: 我需要分解这个问题};
+    B --> C{生成第一个子问题};
+    C --> D["调用工具(如搜索引擎)查找答案"];
+    D --> E[获得中间答案];
+    E --> F{LLM: 是否需要更多信息才能回答原始问题?};
+    F -- 是 --> G{生成下一个子问题};
+    G --> D;
+    F -- 否 --> H[LLM: 综合所有中间答案];
+    H --> I[生成最终答案];
+    I --> J[结束: 向用户呈现答案];
 ```
 
 ### **Python代码案例 (LangChain):**
@@ -969,7 +986,7 @@ graph TD
 
 
 
-### **Python代码案例 (Langgraph):**
+### **Python代码案例 (LangGraph):**
 
 ---
 
@@ -1189,6 +1206,25 @@ if __name__ == "__main__":
 ````
 
 ---
+
+节点图：
+
+```mermaid
+graph TD
+    Start([开始]) --> generate[生成节点<br/>generation_node]
+    generate --> check_code[评估节点<br/>check_code_node]
+    check_code --> decision{条件判断<br/>should_continue}
+    decision -->|reflect| reflect[反思节点<br/>reflection_node]
+    decision -->|end| End([结束])
+    reflect --> generate
+
+    style Start fill:#90EE90
+    style End fill:#FFB6C1
+    style generate fill:#87CEEB
+    style check_code fill:#DDA0DD
+    style reflect fill:#F0E68C
+    style decision fill:#FFE4B5
+```
 
 
 
@@ -1886,7 +1922,7 @@ graph TD
     F --> G[生成最终答案];
 ```
 
-### **Python代码案例 (LangChain):**
+### **Python代码案例 (LangGraph):**
 
 ```python
 import os
@@ -2138,6 +2174,24 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+节点图：
+
+```mermaid
+graph TD
+    Start([开始]) --> planner[规划器节点<br/>planner_node<br/><i>生成解决任务的计划</i>]
+    planner --> worker[执行器节点<br/>worker_node<br/><i>执行计划中的工具调用</i>]
+    worker --> solver[求解器节点<br/>solver_node<br/><i>综合信息生成最终答案</i>]
+    solver --> End([结束])
+
+    style Start fill:#90EE90
+    style End fill:#FFB6C1
+    style planner fill:#87CEEB
+    style worker fill:#DDA0DD
+    style solver fill:#F0E68C
+```
+
+
 
 ### **输出：**
 
