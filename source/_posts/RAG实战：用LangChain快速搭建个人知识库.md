@@ -107,7 +107,7 @@ psql -h localhost -p 5432 -U root pgvector
 
 这是整个项目的完整工作流程图，清晰地展示了数据入库和用户问答两个阶段。
 
-{% plantuml %}
+```plantuml
 
 @startuml
 
@@ -182,7 +182,7 @@ deactivate RAG
 
 @enduml
 
-{% endplantuml %}
+```
 
 ## .env （环境变量）
 
