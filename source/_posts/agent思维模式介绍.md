@@ -31,12 +31,36 @@ ReAct 的工作流程是一个循环：**思考 -> 行动 -> 观察**。
 
 ```mermaid
 graph TD
-    A[用户问题] --> B{Agent: 思考};
-    B --> C["Agent: 行动 (使用工具)"];
-    C --> D[外部工具];
-    D --> E{Agent: 观察};
-    E --> B;
-    E --> F[最终答案];
+    %% 1. 先声明所有的节点和子图结构
+    A["用户提出复杂问题"]
+    B{"Agent (LLM)"}
+    G{"判断"}
+    H["生成最终答案"]
+    I["输出给用户"]
+
+    subgraph ReAct 循环
+        C["Thought (思考/推理)<br>分析问题, 制定计划"]
+        D["Action (行动)<br>调用合适的工具"]
+        E[外部工具<br>如: 搜索引擎, 计算器, API]
+        F["Observation (观察)<br>获取工具的输出"]
+    end
+
+    %% 2. 再统一声明所有的连接关系
+    A --> B
+    B -- " 1. 启动 " --> C
+    C -- " 2. 生成指令 " --> D
+    D -- " 3. 执行 " --> E
+    E -- " 4. 返回结果 " --> F
+    F -- " 5. 将新信息反馈 " --> B
+    B -- " 任务是否完成? " --> G
+    G -- " 否 (No) " --> C
+    G -- " 是 (Yes) " --> H
+    H --> I
+
+    %% 3. 最后应用样式
+    style B fill: #f9f, stroke: #333, stroke-width: 2px
+    style E fill: #bbf, stroke: #333, stroke-width: 2px
+    style H fill: #9f9, stroke: #333, stroke-width: 2px
 ```
 
 ### **Python 代码案例 (LangChain):**
